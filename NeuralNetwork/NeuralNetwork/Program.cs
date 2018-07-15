@@ -19,6 +19,8 @@ namespace NeuralNetwork
         public DateTime startTime;
         public float currAnneal = 0.0f;
         public Queue<float> runningAvg = new Queue<float>();
+        public Parents currentParents = new Parents();
+        public Settings settings = new Settings();
 
         public struct Parents
         {
@@ -42,28 +44,63 @@ namespace NeuralNetwork
             }
         }
 
+        public class Settings
+        {
+            public bool highPrecision;
+            public bool useRandomDataset;
+            public int nodeLayers;
+            public int nodesPL;
+            public int fitnessAverageIters;
+            public float mutationRate;
+            public int childrenPerGen;
+            public int overrallFitIters;
+            public Settings(bool hp, bool rndDat, int nl, int npl, int fai, float mr, int cpg, int ofi)
+            {
+                highPrecision = hp;
+                useRandomDataset = rndDat;
+                nodeLayers = nl;
+                nodesPL = npl;
+                fitnessAverageIters = fai;
+                mutationRate = mr;
+                childrenPerGen = cpg;
+                overrallFitIters = ofi;
+            }
+            public Settings()
+            {
+                highPrecision = false;
+                useRandomDataset = false;
+                nodeLayers = 6;
+                nodesPL = 8;
+                fitnessAverageIters = 400;
+                mutationRate = 1.5f;
+                childrenPerGen = 100;
+                overrallFitIters = 2000;
+            }
+        }
+
         //TODO: Migrate these to a settings file
-        public const bool highPrecision = false;
-        public const int nodeLayers = 6;
-        public const int nodesPL = 8;
-        public const int fitnessAverageIters = 400;
-        public const float mutationRate = 1.5f;
-        public const int childrenPerGen = 100;
-        public const int overrallFitIters = 2000;
+        /*public bool highPrecision = true;
+        public bool useRandomDataset = true;
+        public int nodeLayers = 6;
+        public int nodesPL = 8;
+        public int fitnessAverageIters = 400;
+        public float mutationRate = 1.5f;
+        public int childrenPerGen = 100;
+        public int overrallFitIters = 2000;*/
         //public const float annealAmount = 0.8f;//Start High
         //public const long annealSettleIters = 50000;//After this many iterations the annealing will stop
         //public const int annealDelay = 1000;
 
         public const string alphabet = "abcdefghijklmnopqrstuvwxyz '";
-        public string[] trainData = new string[] { "thomas", "apple" };
-        public string[] badData = new string[] { "xihfv", "vq" };
+        public string[] trainData = new string[] { "dog", "apple", "another", "right" };
+        public string[] badData = new string[] { "xihfv", "vq", "oigwdwg", "zfyacw" };
 
         //Small functions
         private List<float> GenerateRandomWord(Random rnd)
         {
             List<float> outp = new List<float>();
-            int wl = (int)GetRandomIntBetween(1, nodesPL, rnd);
-            for (int i = 0; i < nodesPL; i++)
+            int wl = (int)GetRandomIntBetween(1, settings.nodesPL, rnd);
+            for (int i = 0; i < settings.nodesPL; i++)
             {
                 if (i < wl)
                 {
@@ -75,10 +112,10 @@ namespace NeuralNetwork
                 }
             }
 
-            if (highPrecision)
+            if (settings.highPrecision)
             {
                 string strVersion = "";
-                for (int i = 0; i < nodesPL; i++)
+                for (int i = 0; i < settings.nodesPL; i++)
                 {
                     if (outp[i] == -1)
                         break;
@@ -96,13 +133,13 @@ namespace NeuralNetwork
         public List<List<List<float>>> DeepCopyConnections(List<List<List<float>>> source)
         {
             List<List<List<float>>> outp = new List<List<List<float>>>();
-            for (int x = 0; x < nodeLayers; x++)
+            for (int x = 0; x < settings.nodeLayers; x++)
             {
                 outp.Add(new List<List<float>>());
-                for (int y = 0; y < nodesPL; y++)
+                for (int y = 0; y < settings.nodesPL; y++)
                 {
                     outp[x].Add(new List<float>());
-                    for (int z = 0; z < nodesPL; z++)
+                    for (int z = 0; z < settings.nodesPL; z++)
                     {
                         outp[x][y].Add(source[x][y][z]);
                     }
@@ -135,7 +172,7 @@ namespace NeuralNetwork
             {
                 outp.Add((float)alphabet.IndexOf(letter));
             }
-            for (int i = outp.Count - 1; i < nodesPL; i++)
+            for (int i = outp.Count - 1; i < settings.nodesPL; i++)
             {
                 outp.Add(-1);
             }
@@ -162,6 +199,29 @@ namespace NeuralNetwork
             Console.Title = "Neural Network By Thomas";
             Console.WriteLine("### Neural Network By Thomas ###");
             Console.WriteLine();
+            Console.WriteLine("Loading Settings...");
+            if (System.IO.File.Exists("settings.json"))
+            {
+                try
+                {
+                    string json = System.IO.File.ReadAllText("settings.json");
+                    settings = JsonConvert.DeserializeObject<Settings>(json);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    //return;
+                }
+            } else
+            {
+                try
+                {
+                    System.IO.File.WriteAllText("settings.json", JsonConvert.SerializeObject(settings));
+                } catch(Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
             Console.WriteLine("Enter previous network path, leave bank to continue: ");
             string inPath = Console.ReadLine();
             if (inPath.Length > 0)
@@ -173,7 +233,7 @@ namespace NeuralNetwork
                 } catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
-                    return;
+                    //return;
                 }
             }
             Console.WriteLine("Enter training data path, leave bank to continue: ");
@@ -188,10 +248,23 @@ namespace NeuralNetwork
                     Console.WriteLine(e.Message);
                 }
             }
+            Console.WriteLine("Enter bad training data path, leave bank to continue: ");
+            inPath = Console.ReadLine();
+            if (inPath.Length > 0)
+            {
+                try
+                {
+                    badData = System.IO.File.ReadAllLines(inPath);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
 
             Console.WriteLine("Setting up network...");
             InitialiseNetwork();
-            Console.WriteLine("Network set up as " + nodesPL + " X " + nodeLayers + " nodes.");
+            Console.WriteLine("Network set up as " + settings.nodesPL + " X " + settings.nodeLayers + " nodes.");
 
             Console.CancelKeyPress += BreakFromTraining;
             startTime = DateTime.Now;
@@ -211,23 +284,22 @@ namespace NeuralNetwork
 
             Random rnd = new Random();
             Parents potentialParents = new Parents();
-            Parents currentParents = new Parents();
             while (true)
             {
                 if (shouldPause)
                     return;
 
-                FillMutations(mutationRate);
+                FillMutations(settings.mutationRate);
                 //float avgFitness = 0;
                 bool lastSuccess = false;
 
                 //Let's make some new genes
                 List<List<List<float>>> currConnections = new List<List<List<float>>>(networkConnections);
-                for (int x = 0; x < nodeLayers; x++)
+                for (int x = 0; x < settings.nodeLayers; x++)
                 {
-                    for (int y = 0; y < nodesPL; y++)
+                    for (int y = 0; y < settings.nodesPL; y++)
                     {
-                        for (int z = 0; z < nodesPL; z++)
+                        for (int z = 0; z < settings.nodesPL; z++)
                         {
                             if (currentParents.parent1Connections != null)
                             {
@@ -273,7 +345,7 @@ namespace NeuralNetwork
                 }
 
                 //Genetic Selection
-                if(iters % childrenPerGen == childrenPerGen-1)
+                if(iters % settings.childrenPerGen == settings.childrenPerGen -1)
                 { 
                     currentParents = new Parents(potentialParents);
                     networkConnections = DeepCopyConnections(currentParents.parent1Connections);
@@ -282,7 +354,7 @@ namespace NeuralNetwork
                     gens++;
                 }
 
-                if (runningAvg.Count > overrallFitIters)
+                if (runningAvg.Count > settings.overrallFitIters)
                     runningAvg.Dequeue();
 
                 if (iters % 9 == 0)
@@ -312,7 +384,7 @@ namespace NeuralNetwork
         public float TestConnections(List<List<List<float>>> currConnections, Random rnd)
         {
             float avgFitness = 0;
-            for (int i = 0; i < fitnessAverageIters; i++)
+            for (int i = 0; i < settings.fitnessAverageIters; i++)
             {
                 //lastSuccess = false;
                 if (rnd.NextDouble() >= 0.5)
@@ -322,13 +394,20 @@ namespace NeuralNetwork
                 }
                 else
                 {
-                    List<float> rndWord = GenerateRandomWord(rnd);
+                    List<float> rndWord;
+                    if (settings.useRandomDataset)
+                    {
+                        rndWord = GenerateRandomWord(rnd);
+                    } else
+                    {
+                        rndWord = WordToFloats(badData[(int)(rnd.NextDouble() * badData.Length)]);
+                    }
                     EvaluateNetwork(rndWord, currConnections);
                     avgFitness += (1 - Clamp01(networkNodes.Last()[0]));
                 }
             }
 
-            avgFitness /= fitnessAverageIters;
+            avgFitness /= settings.fitnessAverageIters;
             return avgFitness;
         }
 
@@ -341,7 +420,7 @@ namespace NeuralNetwork
             Console.WriteLine();
             Console.WriteLine();
             Console.WriteLine("## Training Interrupted!");
-            Console.WriteLine("1. Evaluate string in current state. \n2. Save current state. \n3. Reset weights. \n4. Anneal now. \n0. Continue training.");
+            Console.WriteLine("1. Evaluate string in current state. \n2. Save current state. \n3. Reset weights. \n4. Anneal now. \n5. Evaluate string in best state. \n0. Continue training.");
             string inp = Console.ReadLine();
             switch (inp)
             {
@@ -376,16 +455,24 @@ namespace NeuralNetwork
                     float.TryParse(inpower, out newAnneal);
                     Console.WriteLine("Annealing network for 1 iteration!");
                     FillMutations(currAnneal);
-                    for (int x = 0; x < nodeLayers; x++)
+                    for (int x = 0; x < settings.nodeLayers; x++)
                     {
-                        for (int y = 0; y < nodesPL; y++)
+                        for (int y = 0; y < settings.nodesPL; y++)
                         {
-                            for (int z = 0; z < nodesPL; z++)
+                            for (int z = 0; z < settings.nodesPL; z++)
                             {
                                 networkConnections[x][y][z] += tempMutations[x][y][z];
                             }
                         }
                     }
+                    break;
+                case "5":
+                    Console.WriteLine("Enter string to evaluate: ");
+                    evstr = Console.ReadLine();
+                    EvaluateNetwork(WordToFloats(evstr), currentParents.parent1Connections);
+                    Console.WriteLine("Network outputted: " + networkNodes.Last()[0]);
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
                     break;
                 case "0":
                     shouldPause = false;
@@ -409,15 +496,15 @@ namespace NeuralNetwork
         /// </summary>
         public void InitialiseNetwork()
         {
-            for(int y = 0; y < nodeLayers; y++)
+            for(int y = 0; y < settings.nodeLayers; y++)
             {
                 networkNodes.Add(new List<float>());
                 networkConnections.Add(new List<List<float>>());
-                for (int x = 0; x < nodesPL; x++)
+                for (int x = 0; x < settings.nodesPL; x++)
                 {
                     networkNodes[y].Add(0);
                     networkConnections[y].Add(new List<float>());
-                    for(int z = 0; z < nodesPL; z++)
+                    for(int z = 0; z < settings.nodesPL; z++)
                     {
                         networkConnections[y][x].Add(0);
                     }
@@ -433,13 +520,13 @@ namespace NeuralNetwork
         {
             Random rand = new Random();
             tempMutations.Clear();
-            for (int y = 0; y < nodeLayers; y++)
+            for (int y = 0; y < settings.nodeLayers; y++)
             {
                 tempMutations.Add(new List<List<float>>());
-                for (int x = 0; x < nodesPL; x++)
+                for (int x = 0; x < settings.nodesPL; x++)
                 {
                     tempMutations[y].Add(new List<float>());
-                    for (int z = 0; z < nodesPL; z++)
+                    for (int z = 0; z < settings.nodesPL; z++)
                     {
                         tempMutations[y][x].Add(((float)rand.NextDouble()*2-1)*mutAmount);
                     }
@@ -454,26 +541,26 @@ namespace NeuralNetwork
         public void EvaluateNetwork(List<float> inputNodes, List<List<List<float>>> inputConnections)
         {
             networkNodes.Clear();
-            for (int y = 0; y < nodeLayers; y++)
+            for (int y = 0; y < settings.nodeLayers; y++)
             {
                 networkNodes.Add(new List<float>());
-                for (int x = 0; x < nodesPL; x++)
+                for (int x = 0; x < settings.nodesPL; x++)
                 {
                     networkNodes[y].Add(0);
                 }
             }
 
-            for (int i = 0; i < nodesPL; i++)
+            for (int i = 0; i < settings.nodesPL; i++)
             {
                 networkNodes[0][i] = inputNodes[i];
                 //Console.WriteLine("Node at x: " + 0 + ", y: " + i + " = " + networkNodes[0][i]);
             }
 
-            for (int x = 1; x < nodeLayers; x++)
+            for (int x = 1; x < settings.nodeLayers; x++)
             {
-                for(int y = 0; y < nodesPL; y++)
+                for(int y = 0; y < settings.nodesPL; y++)
                 {
-                    for(int z = 0; z < nodesPL; z++)
+                    for(int z = 0; z < settings.nodesPL; z++)
                         networkNodes[x][y] += networkNodes[x-1][z]*(inputConnections[x][y][z]);
                     //Console.WriteLine("Node at x: " + x + ", y: " + y + " = " + networkNodes[x][y]);
                 }
