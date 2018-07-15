@@ -1,0 +1,9 @@
+C:\Users\thomas\Documents\Visual Studio 2017\Projects\NeuralNetwork\NeuralNetwork\obj\Debug\NeuralNetwork.csprojResolveAssemblyReference.cache
+C:\Users\thomas\Documents\Visual Studio 2017\Projects\NeuralNetwork\NeuralNetwork\obj\Debug\NeuralNetwork.csproj.CoreCompileInputs.cache
+C:\Users\thomas\Documents\Visual Studio 2017\Projects\NeuralNetwork\NeuralNetwork\bin\Debug\NeuralNetwork.exe.config
+C:\Users\thomas\Documents\Visual Studio 2017\Projects\NeuralNetwork\NeuralNetwork\bin\Debug\NeuralNetwork.exe
+C:\Users\thomas\Documents\Visual Studio 2017\Projects\NeuralNetwork\NeuralNetwork\bin\Debug\NeuralNetwork.pdb
+C:\Users\thomas\Documents\Visual Studio 2017\Projects\NeuralNetwork\NeuralNetwork\obj\Debug\NeuralNetwork.exe
+C:\Users\thomas\Documents\Visual Studio 2017\Projects\NeuralNetwork\NeuralNetwork\obj\Debug\NeuralNetwork.pdb
+C:\Users\thomas\Documents\Visual Studio 2017\Projects\NeuralNetwork\NeuralNetwork\bin\Debug\Newtonsoft.Json.dll
+C:\Users\thomas\Documents\Visual Studio 2017\Projects\NeuralNetwork\NeuralNetwork\bin\Debug\Newtonsoft.Json.xml
